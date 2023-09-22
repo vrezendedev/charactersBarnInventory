@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
@@ -9,24 +11,15 @@ public class InventoryManager : MonoBehaviour
 
     private Item _selectedItem = null;
     public Item Test;
-    private string _serielizePath = "";
+    private string _serializePath = "";
 
     void Awake()
     {
         if (inventory == null) return;
 
-        _serielizePath = "inv/" + inventory.ID + "_" + inventory.Owner;
+        _serializePath = "inv/" + inventory.ID + "_" + inventory.Owner;
 
-        try
-        {
-            inventory = Deserialize<Inventory>(_serielizePath);
-            // TO DO - Collect complete info from serialized Scriptable Objects
-        }
-        catch (Exception ex)
-        {
-            Debug.Log(ex.Message);
-            inventory.Init(inventory.ID, inventory.name, new System.Collections.Generic.List<(int, Item)>());
-        }
+        LoadSerializedInventory();
     }
 
     public bool Add(Item item, int quantity)
@@ -49,7 +42,7 @@ public class InventoryManager : MonoBehaviour
             this.inventory.Items[index] = itm;
         }
 
-        Serialize(_serielizePath, inventory);
+        Serialize(_serializePath, inventory);
         return true;
     }
 
@@ -72,7 +65,7 @@ public class InventoryManager : MonoBehaviour
             inventory.Items.Remove(itm);
 
 
-        Serialize(_serielizePath, inventory);
+        Serialize(_serializePath, inventory);
     }
 
     /// <summary>
@@ -110,7 +103,7 @@ public class InventoryManager : MonoBehaviour
     public void IncreaseInventorySlotsLimit(int acc)
     {
         this.inventory.InventorySlotsLimit += acc;
-        Serialize(_serielizePath, inventory);
+        Serialize(_serializePath, inventory);
     }
 
     public int GetInventorySlotsLimit() => this.inventory.InventorySlotsLimit;
@@ -129,6 +122,26 @@ public class InventoryManager : MonoBehaviour
 
     }
 
+
+    private void LoadSerializedInventory()
+    {
+        List<Item> items = Resources.LoadAll<Item>("Items").ToList();
+
+        try
+        {
+            inventory = Deserialize<Inventory>(_serializePath);
+
+            for (int i = 0; i < inventory.Items.Count; i++)
+            {
+                inventory.Items[i] = new ValueTuple<int, Item>(inventory.Items[i].Item1, items.Find(obj => obj.ID == inventory.Items[i].Item2.ID));
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.Log(ex.Message);
+            inventory.Init(inventory.ID, inventory.name, new System.Collections.Generic.List<(int, Item)>());
+        }
+    }
 
     //Temporary Serialize Services - the idea is to serialize only before game is finished and deserialize at the start of the game.
     private bool Serialize<T>(string extraPath, T serializable)

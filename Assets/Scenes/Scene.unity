@@ -828,17 +828,22 @@ PrefabInstance:
     - target: {fileID: 543045497595902238, guid: c917b012c8db29042899c270af30fbcf,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 543045497595902238, guid: c917b012c8db29042899c270af30fbcf,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4758523487015090311, guid: c917b012c8db29042899c270af30fbcf,
         type: 3}
       propertyPath: m_Name
       value: ScrollArea
+      objectReference: {fileID: 0}
+    - target: {fileID: 4758523487015090311, guid: c917b012c8db29042899c270af30fbcf,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5815153812928716930, guid: c917b012c8db29042899c270af30fbcf,
         type: 3}
@@ -948,7 +953,7 @@ PrefabInstance:
     - target: {fileID: 8193563335554983966, guid: c917b012c8db29042899c270af30fbcf,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
