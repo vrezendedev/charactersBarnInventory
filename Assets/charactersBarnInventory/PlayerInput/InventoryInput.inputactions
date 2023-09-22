@@ -1,0 +1,34 @@
+{
+    "name": "InventoryInput",
+    "maps": [
+        {
+            "name": "InventoryMap",
+            "id": "61ca954d-db4b-4499-bb0a-e16487cd7489",
+            "actions": [
+                {
+                    "name": "OpenAndClose",
+                    "type": "Button",
+                    "id": "67b80104-822d-4635-8b1c-3b696f737712",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "bc57b325-e44b-4ef6-87d0-56e3a189355d",
+                    "path": "<Keyboard>/i",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "OpenAndClose",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
