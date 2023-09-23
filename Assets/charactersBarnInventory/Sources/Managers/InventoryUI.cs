@@ -1,14 +1,13 @@
-
-using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
+using TMPro;
 
 public class InventoryUI : MonoBehaviour
 {
-    [Header("Required Refs:")]
-    public InventoryManager currentInventoryManager;
+    private InventoryManager _currentInventoryManager;
 
-    [Header("UI Required Elements - Highly Recommended to use and customize the Library's Prefabs")]
+    [Header("UI Required Elements - Highly Recommended to use and customize the Library's Prefabs in order to work properly")]
     public GameObject inventoryPanel;
     public GameObject slotsImages;
     [SerializeField] private GameObject rows;
@@ -21,9 +20,21 @@ public class InventoryUI : MonoBehaviour
     [Header("Customization:")]
     public int slotsPerRow = 5;
 
+    public static UnityAction<InventoryManager> DrawInventory;
+
     private float _width;
     private float _spriteSize;
     private float _distancePerSlot;
+
+    void OnEnable()
+    {
+        DrawInventory += HandleDrawInventory;
+    }
+
+    void OnDisable()
+    {
+        DrawInventory -= HandleDrawInventory;
+    }
 
     void Awake()
     {
@@ -53,34 +64,58 @@ public class InventoryUI : MonoBehaviour
         var vlg = _contentPanel.GetComponent<VerticalLayoutGroup>();
         hlg.spacing = vlg.spacing = Mathf.FloorToInt(_distancePerSlot);
         vlg.padding.top = vlg.padding.left = (int)vlg.spacing * 2;
-
-        Draw();
     }
 
-    public void OnOpenAndClose() => inventoryPanel.SetActive(!inventoryPanel.activeInHierarchy);
+    public void OnOpenAndClose()
+    {
+        if (!inventoryPanel.activeInHierarchy) Draw();
+        else Erase();
+
+        inventoryPanel.SetActive(!inventoryPanel.activeInHierarchy);
+    }
+
+    public void HandleDrawInventory(InventoryManager im)
+    {
+        _currentInventoryManager = im;
+
+        if (inventoryPanel.activeInHierarchy)
+        {
+            Erase();
+            Draw();
+        }
+    }
 
     public void Draw()
     {
-        foreach (Transform child in _contentPanel.transform)
-        {
-            DestroyImmediate(child.gameObject);
-        }
-
-        for (int i = 0; i < currentInventoryManager.GetInventorySlotsLimit(); i++)
+        for (int i = 0; i < _currentInventoryManager.GetInventorySlotsLimit(); i++)
         {
             var row = Instantiate(rows, _contentPanel.transform);
             for (int j = 0; j < slotsPerRow; j++, i++)
             {
                 var obj = Instantiate(slotsImages, row.transform);
-                var item = currentInventoryManager.
+                var item = _currentInventoryManager.
                 GetItemByIndex(i);
 
                 if (item == null) continue;
 
-                obj.GetComponent<Image>().sprite = item.Sprite;
-                obj.GetComponent<Button>().onClick.AddListener(delegate { Debug.Log(item.ItemData.Name); });
+                obj.GetComponent<Image>().sprite = item.Value.Item2.Sprite;
+                obj.GetComponent<Button>().onClick.AddListener(delegate { Debug.Log(item.Value.Item2.ItemData.Name); });
+                obj.GetComponentInChildren<TextMeshProUGUI>().text = item.Value.Item1.ToString();
             }
 
+        }
+    }
+
+    public void Erase()
+    {
+        for (int i = 0; i < _contentPanel.transform.childCount; i++)
+        {
+            var row = _contentPanel.transform.GetChild(i).gameObject;
+            for (int j = 0; j < row.transform.childCount; j++)
+            {
+                row.transform.GetChild(j).GetComponent<Button>().onClick.RemoveAllListeners();
+            }
+            Destroy(row);
         }
     }
 

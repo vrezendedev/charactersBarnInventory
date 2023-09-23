@@ -724,8 +724,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1653596936}
   - component: {fileID: 1653596937}
-  - component: {fileID: 1653596939}
-  - component: {fileID: 1653596938}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -760,15 +758,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81b9260ba0519e044bfc32b5f19df3cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventory: {fileID: 11400000, guid: 222163043f8437844bc236991e1dc7db, type: 2}
-  Test: {fileID: 11400000, guid: c8013df427539f64e80a110ae417e128, type: 2}
---- !u!114 &1653596938
+  _inventory: {fileID: 11400000, guid: ba02f2152194b6f4491eb123174d1ec7, type: 2}
+  isActiveChar: 1
+--- !u!1 &1804510537
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1804510538}
+  - component: {fileID: 1804510539}
+  - component: {fileID: 1804510540}
+  m_Layer: 0
+  m_Name: UIInventoryManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1804510538
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1804510537}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1804510539
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1653596935}
+  m_GameObject: {fileID: 1804510537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7cafad7afbf35249ae750c446e3bbfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inventoryPanel: {fileID: 734898741}
+  slotsImages: {fileID: 6355562531794056755, guid: f9ce1d95f6c658f4f9e3ddd871ae70a3,
+    type: 3}
+  rows: {fileID: 5215819584884566349, guid: e0f9b7e13852a8348a925f77bddf0d83, type: 3}
+  inventoryOpenButton: {fileID: 0}
+  inventoryCloseButton: {fileID: 1594077784}
+  slotsPerRow: 4
+--- !u!114 &1804510540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1804510537}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
@@ -797,26 +847,6 @@ MonoBehaviour:
   m_DefaultActionMap: InventoryMap
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &1653596939
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1653596935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7cafad7afbf35249ae750c446e3bbfa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentInventoryManager: {fileID: 1653596937}
-  inventoryPanel: {fileID: 734898741}
-  slotsImages: {fileID: 6355562531794056755, guid: f9ce1d95f6c658f4f9e3ddd871ae70a3,
-    type: 3}
-  rows: {fileID: 5215819584884566349, guid: e0f9b7e13852a8348a925f77bddf0d83, type: 3}
-  inventoryOpenButton: {fileID: 0}
-  inventoryCloseButton: {fileID: 1594077784}
-  slotsPerRow: 4
 --- !u!1001 &3631562935853005908
 PrefabInstance:
   m_ObjectHideFlags: 0

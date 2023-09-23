@@ -6,81 +6,80 @@ using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
-    [Header("Required:")]
-    [SerializeField] private Inventory inventory;
+    [Header("Required but Interchangeable via Event:")]
+    [SerializeField] private Inventory _inventory;
+
+    [Header("Multichar Options")]
+    [Tooltip("If active Draw on UI"), SerializeField] private bool isActiveChar = false;
 
     private Item _selectedItem = null;
-    public Item Test;
     private string _serializePath = "";
 
-    void Awake()
+    void OnDisable()
     {
-        if (inventory == null) return;
+        Serialize(_serializePath, _inventory);
+    }
 
-        _serializePath = "inv/" + inventory.ID + "_" + inventory.Owner;
+    void Start()
+    {
+        if (_inventory == null) return;
 
+        _serializePath = "inv/" + _inventory.ID + "_" + _inventory.Owner;
         LoadSerializedInventory();
+
     }
 
     public bool Add(Item item, int quantity)
     {
-        int index = inventory.FindItemIndex(item);
 
-        if (quantity <= 0) return false;
+        if (item == null || quantity <= 0) return false;
+
+        int index = _inventory.FindItemIndex(item);
 
         if (index == -1)
         {
-            if (inventory.Items.Count < inventory.InventorySlotsLimit)
-                this.inventory.Items.Add(new(quantity, item));
+            if (_inventory.Items.Count < _inventory.InventorySlotsLimit)
+                this._inventory.Items.Add(new(quantity, item));
             else
                 return false;
         }
         else
         {
-            var itm = this.inventory.Items[index];
+            var itm = this._inventory.Items[index];
             itm.Item1 += quantity;
-            this.inventory.Items[index] = itm;
+            this._inventory.Items[index] = itm;
         }
 
-        Serialize(_serializePath, inventory);
+        DrawIfActive();
         return true;
     }
 
-    /// <summary>
-    /// Discard n quantity of the target item from the inventory.
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="quantity">Default -1 or max value to Discard all</param>
-    public void Discard(Item item, int quantity = -1)
+    public void Discard(Item item, int quantity)
     {
-        int index = inventory.FindItemIndex(item);
-        var itm = this.inventory.Items[index];
+        int index = _inventory.FindItemIndex(item);
+        var itm = this._inventory.Items[index];
 
-        if (quantity > -1 && quantity < itm.Item1)
+        if (quantity < itm.Item1)
         {
             itm.Item1 -= quantity;
-            inventory.Items[index] = itm;
+            _inventory.Items[index] = itm;
         }
         else
-            inventory.Items.Remove(itm);
+        {
+            _inventory.Items.Remove(itm);
+        }
 
-
-        Serialize(_serializePath, inventory);
+        DrawIfActive();
     }
 
-    /// <summary>
-    /// Transfer n of the selected item between inventories, the one who wants to transfer should call this method targeting the other's inventory.
-    /// </summary>
-    /// <param name="im">Target Inventory Manager</param>
-    /// <param name="quantity">Default -1 or max value to Transfer all</param>
-    public void Transfer(InventoryManager im, int quantity = -1)
+    public void Transfer(InventoryManager im, int quantity)
     {
-        if (_selectedItem == null) return;
+        if (_selectedItem == null) _selectedItem = _inventory.Items[0].Item2;
 
-        int index = inventory.FindItemIndex(_selectedItem);
-        var item = inventory.Items[index];
+        int index = _inventory.FindItemIndex(_selectedItem);
+        var item = _inventory.Items[index];
 
-        if (quantity > -1 && quantity < item.Item1)
+        if (quantity < item.Item1)
         {
             item.Item1 -= quantity;
             im.Add(item.Item2, item.Item1);
@@ -90,31 +89,31 @@ public class InventoryManager : MonoBehaviour
             im.Add(item.Item2, item.Item1);
         }
 
-        this.Discard(item.Item2, quantity != -1 ? quantity : -1);
+        this.Discard(item.Item2, quantity);
     }
 
     public void Use()
     {
         if (_selectedItem == null) return;
-        _selectedItem.ItemAction.Act(this.inventory);
-
+        _selectedItem.ItemAction.Act(this._inventory);
+        DrawIfActive();
     }
 
-    public void IncreaseInventorySlotsLimit(int acc)
-    {
-        this.inventory.InventorySlotsLimit += acc;
-        Serialize(_serializePath, inventory);
-    }
-
-    public int GetInventorySlotsLimit() => this.inventory.InventorySlotsLimit;
-
-    public Item GetItemByIndex(int index)
+    public ValueTuple<int, Item>? GetItemByIndex(int index)
     {
         try
         {
-            return this.inventory.Items[index].Item2;
+            return this._inventory.Items[index];
         }
         catch { return null; }
+    }
+
+    public int GetInventorySlotsLimit() => this._inventory.InventorySlotsLimit;
+
+    public void IncreaseInventorySlotsLimit(int acc)
+    {
+        this._inventory.InventorySlotsLimit += acc;
+        DrawIfActive();
     }
 
     public void InteractWithItem()
@@ -122,6 +121,16 @@ public class InventoryManager : MonoBehaviour
 
     }
 
+    private void DrawIfActive()
+    {
+        if (isActiveChar) InventoryUI.DrawInventory(this);
+    }
+
+    public void ChangeActiveState(bool value)
+    {
+        isActiveChar = value;
+        DrawIfActive();
+    }
 
     private void LoadSerializedInventory()
     {
@@ -129,21 +138,21 @@ public class InventoryManager : MonoBehaviour
 
         try
         {
-            inventory = Deserialize<Inventory>(_serializePath);
-
-            for (int i = 0; i < inventory.Items.Count; i++)
+            _inventory = Deserialize<Inventory>(_serializePath);
+            for (int i = 0; i < _inventory.Items.Count; i++)
             {
-                inventory.Items[i] = new ValueTuple<int, Item>(inventory.Items[i].Item1, items.Find(obj => obj.ID == inventory.Items[i].Item2.ID));
+                _inventory.Items[i] = new ValueTuple<int, Item>(_inventory.Items[i].Item1, items.Find(obj => obj.ID == _inventory.Items[i].Item2.ID));
             }
         }
         catch (Exception ex)
         {
             Debug.Log(ex.Message);
-            inventory.Init(inventory.ID, inventory.name, new System.Collections.Generic.List<(int, Item)>());
+            _inventory.Init(_inventory.ID, _inventory.name, new System.Collections.Generic.List<(int, Item)>());
         }
+
+        DrawIfActive();
     }
 
-    //Temporary Serialize Services - the idea is to serialize only before game is finished and deserialize at the start of the game.
     private bool Serialize<T>(string extraPath, T serializable)
     {
         string path = Application.persistentDataPath + "/" + extraPath + ".json";
@@ -165,7 +174,7 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public static T Deserialize<T>(string extraPath)
+    private static T Deserialize<T>(string extraPath)
     {
         string path = Application.persistentDataPath + "/" + extraPath + ".json";
 
