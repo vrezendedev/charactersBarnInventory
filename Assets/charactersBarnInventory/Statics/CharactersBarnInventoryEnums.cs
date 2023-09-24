@@ -14,4 +14,11 @@ public static class CharactersBarnInventoryEnums
         Consumable = 2
     }
 
+    public enum ItemOptions
+    {
+        Use = 0,
+        Discard = 1,
+        Transfer = 2,
+    }
+
 }

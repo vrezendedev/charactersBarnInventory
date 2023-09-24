@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using static CharactersBarnInventoryEnums;
 
 public class InventoryManager : MonoBehaviour
 {
@@ -26,7 +27,6 @@ public class InventoryManager : MonoBehaviour
 
         _serializePath = "inv/" + _inventory.ID + "_" + _inventory.Owner;
         LoadSerializedInventory();
-
     }
 
     public bool Add(Item item, int quantity)
@@ -74,7 +74,7 @@ public class InventoryManager : MonoBehaviour
 
     public void Transfer(InventoryManager im, int quantity)
     {
-        if (_selectedItem == null) _selectedItem = _inventory.Items[0].Item2;
+        if (_selectedItem == null) return;
 
         int index = _inventory.FindItemIndex(_selectedItem);
         var item = _inventory.Items[index];
@@ -116,9 +116,25 @@ public class InventoryManager : MonoBehaviour
         DrawIfActive();
     }
 
-    public void InteractWithItem()
+    public void SetSelectedItem(Item item)
     {
+        _selectedItem = item;
+        if (_selectedItem != null)
+            Debug.Log(item.ItemData.Name);
+    }
 
+    public void InteractWithItem(ItemOptions option)
+    {
+        switch (option)
+        {
+            case ItemOptions.Use:
+                break;
+            case ItemOptions.Discard:
+                break;
+            case ItemOptions.Transfer:
+
+                break;
+        }
     }
 
     private void DrawIfActive()
@@ -147,7 +163,7 @@ public class InventoryManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.Log(ex.Message);
-            _inventory.Init(_inventory.ID, _inventory.name, new System.Collections.Generic.List<(int, Item)>());
+            _inventory.Init(_inventory.ID, _inventory.name, new List<(int, Item)>());
         }
 
         DrawIfActive();
