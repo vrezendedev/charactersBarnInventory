@@ -21,4 +21,5 @@ public class Inventory : ScriptableObject
     }
 
     public int FindItemIndex(Item item) => Items.FindIndex(obj => obj.Item2.ID == item.ID);
+
 }

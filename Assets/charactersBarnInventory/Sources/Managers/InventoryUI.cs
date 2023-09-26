@@ -5,6 +5,7 @@ using TMPro;
 using static CharactersBarnInventoryEnums;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -21,13 +22,20 @@ public class InventoryUI : MonoBehaviour
 
     public GameObject discardMenu;
     public TextMeshProUGUI discardText;
-    public GameObject discardPlusOne;
-    public GameObject discardPlusFive;
-    public GameObject discardPlusTen;
-    public GameObject discardAll;
-    public GameObject discardReset;
-    public GameObject discardCancel;
-    public GameObject discardConfirm;
+    public GameObject discardPlusOneBtn;
+    public GameObject discardPlusFiveBtn;
+    public GameObject discardPlusTenBtn;
+    public GameObject discardAllBtn;
+    public GameObject discardResetBtn;
+    public GameObject discardCancelBtn;
+    public GameObject discardConfirmBtn;
+
+    public GameObject transferMenu;
+    public TextMeshProUGUI transferText;
+    public TMP_Dropdown transferDropdown;
+    public TMP_InputField transferInputField;
+    public GameObject transferCancelBtn;
+    public GameObject transferConfirmBtn;
 
     public GameObject slotsImages;
     [SerializeField] private GameObject rows;
@@ -49,6 +57,11 @@ public class InventoryUI : MonoBehaviour
     private int _discardMaxQuantity = 0;
     private string _discardItemName = "";
 
+    private Item _transferItem = null;
+    private InventoryManager _transferTarget = null;
+    private int _transferQuantity = 0;
+    private int _transferMaxQuantity = 0;
+
     void OnEnable()
     {
         DrawInventory += HandleDrawInventory;
@@ -65,7 +78,7 @@ public class InventoryUI : MonoBehaviour
             inventoryOpenButton.GetComponent<Button>().onClick.AddListener(delegate { inventoryPanel.SetActive(true); });
 
         if (inventoryCloseButton != null)
-            inventoryCloseButton.GetComponent<Button>().onClick.AddListener(delegate { inventoryPanel.SetActive(false); });
+            inventoryCloseButton.GetComponent<Button>().onClick.AddListener(delegate { CloseAll(); });
 
 
         itemOptionsMenu.SetActive(false);
@@ -90,26 +103,63 @@ public class InventoryUI : MonoBehaviour
         hlg.spacing = vlg.spacing = Mathf.FloorToInt(_distancePerSlot);
         vlg.padding.top = vlg.padding.left = (int)vlg.spacing * 2;
 
-        discardPlusOne.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 1); });
-        discardPlusFive.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 5); });
-        discardPlusTen.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 10); });
-        discardReset.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(false, 0); });
-        discardCancel.GetComponent<Button>().onClick.AddListener(delegate { discardMenu.SetActive(false); _discardItemName = ""; _discardQuantity = 0; });
+        discardPlusOneBtn.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 1); });
+        discardPlusFiveBtn.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 5); });
+        discardPlusTenBtn.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 10); });
+        discardResetBtn.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(false, 0); });
+        discardCancelBtn.GetComponent<Button>().onClick.AddListener(delegate { discardMenu.SetActive(false); _discardItemName = ""; _discardQuantity = 0; _currentInventoryManager.SetSelectedItem(null); });
+        transferCancelBtn.GetComponent<Button>().onClick.AddListener(delegate { transferMenu.SetActive(false); _transferTarget = null; _transferItem = null; _transferQuantity = 0; _currentInventoryManager.SetSelectedItem(null); });
+        transferInputField.onValueChanged.AddListener(delegate (string e)
+        {
+            _transferQuantity = e.Length > 0 ? int.Parse(e) : 0;
+            _transferQuantity = Mathf.Clamp(_transferQuantity, 0, _transferMaxQuantity);
+            transferInputField.SetTextWithoutNotify(_transferQuantity.ToString());
+            transferText.text = $"Transfer \n {_transferItem.ItemData.Name}... to:";
+        });
+        transferConfirmBtn.GetComponent<Button>().onClick.AddListener(delegate
+        {
+            if (_currentInventoryManager != null)
+            {
+                _currentInventoryManager.Transfer(_transferTarget, _transferQuantity, _transferItem);
+                transferMenu.SetActive(false);
+                _transferItem = null;
+                _transferMaxQuantity = 0;
+                _transferQuantity = 0;
+                _currentInventoryManager.SetSelectedItem(null);
+            }
+        });
     }
 
     void Update()
     {
         if (discardMenu.activeSelf)
-            discardConfirm.GetComponent<Button>().interactable = _discardQuantity > 0;
+            discardConfirmBtn.GetComponent<Button>().interactable = _discardQuantity > 0;
+
+        if (transferMenu.activeSelf)
+            transferConfirmBtn.GetComponent<Button>().interactable = _transferQuantity > 0 && _transferTarget != null;
 
     }
 
     public void OnOpenAndClose()
     {
-        if (!inventoryPanel.activeSelf) Draw();
-        else Erase();
+        if (!inventoryPanel.activeSelf)
+        {
+            Draw();
+            inventoryPanel.SetActive(true);
+        }
+        else
+        {
+            Erase();
+            CloseAll();
+        }
+    }
 
-        inventoryPanel.SetActive(!inventoryPanel.activeSelf);
+    private void CloseAll()
+    {
+        _currentInventoryManager.SetSelectedItem(null);
+        inventoryPanel.SetActive(false);
+        itemOptionsMenu.SetActive(false);
+        discardMenu.SetActive(false);
     }
 
     private void SetDiscardQuantity(bool acc, int i)
@@ -141,6 +191,8 @@ public class InventoryUI : MonoBehaviour
 
     public void HandleItemOptionsMenu(bool show, ValueTuple<int, Item> item = new ValueTuple<int, Item>())
     {
+        if (discardMenu.activeSelf || transferMenu.activeSelf) return;
+
         var useBtn = useButton.GetComponent<Button>();
         var dscBtn = discardButton.GetComponent<Button>();
         var trnBtn = transferButton.GetComponent<Button>();
@@ -149,7 +201,7 @@ public class InventoryUI : MonoBehaviour
         dscBtn.onClick.RemoveAllListeners();
         trnBtn.onClick.RemoveAllListeners();
 
-        if (discardMenu.activeInHierarchy) return;
+        transferButton.SetActive(FindObjectsOfType<InventoryManager>().Count() > 1);
 
         if (show)
         {
@@ -158,7 +210,7 @@ public class InventoryUI : MonoBehaviour
             useBtn.GetComponentInChildren<TextMeshProUGUI>().text = item.Item2.ItemData.ItemActionVerb.ToString();
             useBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item.Item2, ItemOptions.Use); });
             dscBtn.onClick.AddListener(delegate { HandleDiscardOption(item); });
-            trnBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item.Item2, ItemOptions.Transfer); });
+            trnBtn.onClick.AddListener(delegate { HandleTransfer(item); });
         }
         else
         {
@@ -173,11 +225,42 @@ public class InventoryUI : MonoBehaviour
         _discardMaxQuantity = item.Item1;
         discardText.text = $"Discard: {_discardQuantity} of {_discardItemName}";
         itemOptionsMenu.SetActive(false);
-        discardAll.GetComponent<Button>().onClick.RemoveAllListeners();
-        discardAll.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(false, item.Item1); });
-        discardConfirm.GetComponent<Button>().onClick.RemoveAllListeners();
-        discardConfirm.GetComponent<Button>().onClick.AddListener(delegate { _currentInventoryManager.Discard(item.Item2, _discardQuantity); _discardItemName = ""; _discardQuantity = 0; _discardMaxQuantity = 0; discardMenu.SetActive(false); });
+        discardAllBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        discardAllBtn.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(false, item.Item1); });
+        discardConfirmBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        discardConfirmBtn.GetComponent<Button>().onClick.AddListener(delegate { _currentInventoryManager.Discard(item.Item2, _discardQuantity); _discardItemName = ""; _discardQuantity = 0; _discardMaxQuantity = 0; discardMenu.SetActive(false); _currentInventoryManager.SetSelectedItem(null); });
         discardMenu.SetActive(true);
+    }
+
+    public void HandleTransfer(ValueTuple<int, Item> item)
+    {
+        _transferItem = item.Item2;
+        _transferMaxQuantity = item.Item1;
+        transferText.text = $"Transfer \n {_transferItem.ItemData.Name}... to:";
+
+        itemOptionsMenu.SetActive(false);
+
+        transferDropdown.onValueChanged.RemoveAllListeners();
+        transferDropdown.ClearOptions();
+        List<string> options = new List<string>();
+
+        foreach (var inventoryManager in FindObjectsOfType<InventoryManager>())
+        {
+            if (inventoryManager != _currentInventoryManager)
+            {
+                options.Add(inventoryManager.gameObject.name);
+            }
+        }
+
+        transferDropdown.onValueChanged.AddListener(delegate (int index)
+        {
+            _transferTarget = GameObject.Find(transferDropdown.options[index].text).GetComponent<InventoryManager>();
+        });
+
+        transferDropdown.AddOptions(options);
+        //Initialize _transferTarget;
+        _transferTarget = GameObject.Find(transferDropdown.options[0].text).GetComponent<InventoryManager>();
+        transferMenu.SetActive(true);
     }
 
     public void Draw()
@@ -235,8 +318,6 @@ public class InventoryUI : MonoBehaviour
             }
             Destroy(row);
         }
-
-        itemOptionsMenu.SetActive(false);
     }
 
 }

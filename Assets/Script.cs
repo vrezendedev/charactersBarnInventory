@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class Script : MonoBehaviour
 {
+    [Header("Test Script to change between inventories! Press A, B or C to activate each inventory and change between them.")]
     public InventoryManager InventoryA;
     public InventoryManager InventoryB;
-
-    public Item Item;
+    public InventoryManager InventoryC;
 
     void Start()
     {
@@ -14,17 +14,26 @@ public class Script : MonoBehaviour
 
     void Update()
     {
+
         if (Input.GetKeyDown(KeyCode.A))
         {
-            InventoryA.Add(Item, 10);
             InventoryA.ChangeActiveState(true);
             InventoryB.ChangeActiveState(false);
+            InventoryC.ChangeActiveState(false);
         }
 
         if (Input.GetKeyDown(KeyCode.B))
         {
             InventoryA.ChangeActiveState(false);
             InventoryB.ChangeActiveState(true);
+            InventoryC.ChangeActiveState(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            InventoryA.ChangeActiveState(false);
+            InventoryB.ChangeActiveState(false);
+            InventoryC.ChangeActiveState(true);
         }
 
     }

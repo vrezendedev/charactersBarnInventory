@@ -29,10 +29,9 @@ public class InventoryManager : MonoBehaviour
         LoadSerializedInventory();
     }
 
-    public bool Add(Item item, int quantity)
+    public void Add(Item item, int quantity)
     {
-
-        if (item == null || quantity <= 0) return false;
+        if (item == null || quantity <= 0) return;
 
         int index = _inventory.FindItemIndex(item);
 
@@ -41,7 +40,7 @@ public class InventoryManager : MonoBehaviour
             if (_inventory.Items.Count < _inventory.InventorySlotsLimit)
                 this._inventory.Items.Add(new(quantity, item));
             else
-                return false;
+                return;
         }
         else
         {
@@ -51,7 +50,6 @@ public class InventoryManager : MonoBehaviour
         }
 
         DrawIfActive();
-        return true;
     }
 
     public void Discard(Item item, int quantity)
@@ -72,21 +70,20 @@ public class InventoryManager : MonoBehaviour
         DrawIfActive();
     }
 
-    public void Transfer(InventoryManager im, int quantity)
+    public void Transfer(InventoryManager im, int quantity, Item i = null)
     {
-        if (_selectedItem == null) return;
-
-        int index = _inventory.FindItemIndex(_selectedItem);
+        if (i == null) return;
+        int index = _inventory.FindItemIndex(i);
         var item = _inventory.Items[index];
 
         if (quantity < item.Item1)
         {
             item.Item1 -= quantity;
-            im.Add(item.Item2, item.Item1);
+            im.Add(item.Item2, quantity);
         }
         else
         {
-            im.Add(item.Item2, item.Item1);
+            im.Add(item.Item2, quantity);
         }
 
         this.Discard(item.Item2, quantity);
@@ -180,7 +177,7 @@ public class InventoryManager : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError(ex);
+            Debug.Log(ex);
             return false;
         }
     }
@@ -198,7 +195,7 @@ public class InventoryManager : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError(ex);
+            Debug.Log(ex);
             throw ex;
         }
     }
