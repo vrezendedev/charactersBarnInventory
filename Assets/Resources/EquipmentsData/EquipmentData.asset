@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Name: Banjo of Wisdom
   Description: It's a banjo and it has wisdom.
+  ItemActionVerb: 1

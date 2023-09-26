@@ -7,6 +7,13 @@ public static class CharactersBarnInventoryEnums
         Consumable = 2
     }
 
+    public enum ItemActionVerb
+    {
+        Combine = 0,
+        Equip = 1,
+        Consume = 2
+    }
+
     public enum ItemDataType
     {
         Material = 0,

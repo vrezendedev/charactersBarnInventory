@@ -116,23 +116,20 @@ public class InventoryManager : MonoBehaviour
         DrawIfActive();
     }
 
-    public void SetSelectedItem(Item item)
-    {
-        _selectedItem = item;
-        if (_selectedItem != null)
-            Debug.Log(item.ItemData.Name);
-    }
+    public void SetSelectedItem(Item item) => _selectedItem = item;
 
-    public void InteractWithItem(ItemOptions option)
+    public void InteractWithItem(Item item, ItemOptions option)
     {
         switch (option)
         {
             case ItemOptions.Use:
+                Debug.Log("Use!");
                 break;
             case ItemOptions.Discard:
+                Debug.Log("Discard!");
                 break;
             case ItemOptions.Transfer:
-
+                Debug.Log("Transfer!");
                 break;
         }
     }

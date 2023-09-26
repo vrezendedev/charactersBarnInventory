@@ -9,13 +9,14 @@ public class Script : MonoBehaviour
 
     void Start()
     {
-        InventoryA.Add(Item, 10);
+
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.A))
         {
+            InventoryA.Add(Item, 10);
             InventoryA.ChangeActiveState(true);
             InventoryB.ChangeActiveState(false);
         }
@@ -26,9 +27,5 @@ public class Script : MonoBehaviour
             InventoryB.ChangeActiveState(true);
         }
 
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            InventoryA.Transfer(InventoryB, 5);
-        }
     }
 }

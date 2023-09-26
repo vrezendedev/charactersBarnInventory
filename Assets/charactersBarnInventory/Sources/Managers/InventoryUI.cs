@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 using static CharactersBarnInventoryEnums;
+using System.Collections.Generic;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -11,6 +12,10 @@ public class InventoryUI : MonoBehaviour
     [Header("UI Required Elements - Must use the Library's Prefabs, but you may customize its visual")]
     public GameObject inventoryPanel;
     public GameObject itemOptionsMenu;
+    public TextMeshProUGUI itemOptionsItemName;
+    public GameObject useButton;
+    public GameObject discardButton;
+    public GameObject transferButton;
     public GameObject slotsImages;
     [SerializeField] private GameObject rows;
     private GameObject _contentPanel;
@@ -40,9 +45,7 @@ public class InventoryUI : MonoBehaviour
 
     void Awake()
     {
-        if (inventoryPanel == null) return;
-
-        if (itemOptionsMenu == null) return;
+        if (inventoryPanel == null || itemOptionsMenu == null || itemOptionsItemName == null || slotsImages == null || rows == null || useButton == null || discardButton == null || transferButton == null) return;
 
         if (inventoryOpenButton != null)
             inventoryOpenButton.GetComponent<Button>().onClick.AddListener(delegate { inventoryPanel.SetActive(true); });
@@ -95,15 +98,29 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    public void HandleItemOptionsMenu(bool show, ItemDataType? itemDataType)
+    public void HandleItemOptionsMenu(bool show, Item item)
     {
+        var useBtn = useButton.GetComponent<Button>();
+        var dscBtn = discardButton.GetComponent<Button>();
+        var trnBtn = transferButton.GetComponent<Button>();
+
+        useBtn.onClick.RemoveAllListeners();
+        dscBtn.onClick.RemoveAllListeners();
+        trnBtn.onClick.RemoveAllListeners();
+
         if (show)
         {
             itemOptionsMenu.SetActive(true);
+            itemOptionsItemName.text = item.ItemData.Name;
+            useBtn.GetComponentInChildren<TextMeshProUGUI>().text = item.ItemData.ItemActionVerb.ToString();
+            useBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item, ItemOptions.Use); });
+            dscBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item, ItemOptions.Discard); });
+            trnBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item, ItemOptions.Transfer); });
         }
         else
         {
             itemOptionsMenu.SetActive(false);
+            itemOptionsItemName.text = "";
         }
     }
 
@@ -134,7 +151,7 @@ public class InventoryUI : MonoBehaviour
                     delegate
                     {
                         _currentInventoryManager.SetSelectedItem(item.Value.Item2);
-                        HandleItemOptionsMenu(true, item.Value.Item2.ItemData.DataType);
+                        HandleItemOptionsMenu(true, item.Value.Item2);
                     }
                 );
                 obj.GetComponentInChildren<TextMeshProUGUI>().text = item.Value.Item1.ToString();
