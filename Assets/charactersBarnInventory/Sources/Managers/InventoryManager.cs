@@ -7,7 +7,7 @@ using static CharactersBarnInventoryEnums;
 
 public class InventoryManager : MonoBehaviour
 {
-    [Header("Required but Interchangeable via Event:")]
+    [Header("Required:")]
     [SerializeField] private Inventory _inventory;
 
     [Header("Multichar Options")]
@@ -92,13 +92,6 @@ public class InventoryManager : MonoBehaviour
         this.Discard(item.Item2, quantity);
     }
 
-    public void Use()
-    {
-        if (_selectedItem == null) return;
-        _selectedItem.ItemAction.Act(this._inventory);
-        DrawIfActive();
-    }
-
     public ValueTuple<int, Item>? GetItemByIndex(int index)
     {
         try
@@ -118,12 +111,17 @@ public class InventoryManager : MonoBehaviour
 
     public void SetSelectedItem(Item item) => _selectedItem = item;
 
+    public Item GetSelectedItem() => _selectedItem;
+
     public void InteractWithItem(Item item, ItemOptions option)
     {
+        if (item == null) return;
+
         switch (option)
         {
             case ItemOptions.Use:
-                Debug.Log("Use!");
+                _inventory.Items[_inventory.FindItemIndex(item)].Item2.ItemAction.Act(item, this);
+                DrawIfActive();
                 break;
             case ItemOptions.Discard:
                 Debug.Log("Discard!");

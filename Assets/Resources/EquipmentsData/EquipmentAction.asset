@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1a5edfae11e0d24da4c4c5c4df39985, type: 3}
   m_Name: EquipmentAction
   m_EditorClassIdentifier: 
-  Description: Playing the banjo!
+  Description: Equipped the banjo!

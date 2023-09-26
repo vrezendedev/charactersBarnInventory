@@ -15,5 +15,5 @@ MonoBehaviour:
   ID: 0
   ActionType: 1
   Sprite: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
-  ItemData: {fileID: 11400000, guid: 9ae29d43773ca474f8600185a310d9d4, type: 2}
-  ItemAction: {fileID: 11400000, guid: 90f2b8a371a57f04890bb1dda4792b6d, type: 2}
+  ItemData: {fileID: 11400000, guid: 03549dd9029d3c14997138db165da860, type: 2}
+  ItemAction: {fileID: 11400000, guid: a6558ec4ebfcc3744b284683b2c0c277, type: 2}

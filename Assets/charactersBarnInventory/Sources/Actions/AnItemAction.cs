@@ -5,7 +5,7 @@ using UnityEngine;
 public class AnItemAction : ItemAction
 {
     public string Description;
-    public override void Act(Inventory iv)
+    public override void Act(Item item, InventoryManager iv)
     {
         Debug.Log(Description);
     }

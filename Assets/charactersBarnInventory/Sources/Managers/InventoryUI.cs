@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using static CharactersBarnInventoryEnums;
 using System.Collections.Generic;
+using System;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -11,11 +12,23 @@ public class InventoryUI : MonoBehaviour
 
     [Header("UI Required Elements - Must use the Library's Prefabs, but you may customize its visual")]
     public GameObject inventoryPanel;
+
     public GameObject itemOptionsMenu;
     public TextMeshProUGUI itemOptionsItemName;
     public GameObject useButton;
     public GameObject discardButton;
     public GameObject transferButton;
+
+    public GameObject discardMenu;
+    public TextMeshProUGUI discardText;
+    public GameObject discardPlusOne;
+    public GameObject discardPlusFive;
+    public GameObject discardPlusTen;
+    public GameObject discardAll;
+    public GameObject discardReset;
+    public GameObject discardCancel;
+    public GameObject discardConfirm;
+
     public GameObject slotsImages;
     [SerializeField] private GameObject rows;
     private GameObject _contentPanel;
@@ -32,6 +45,9 @@ public class InventoryUI : MonoBehaviour
     private float _width;
     private float _spriteSize;
     private float _distancePerSlot;
+    private int _discardQuantity = 0;
+    private int _discardMaxQuantity = 0;
+    private string _discardItemName = "";
 
     void OnEnable()
     {
@@ -45,8 +61,6 @@ public class InventoryUI : MonoBehaviour
 
     void Awake()
     {
-        if (inventoryPanel == null || itemOptionsMenu == null || itemOptionsItemName == null || slotsImages == null || rows == null || useButton == null || discardButton == null || transferButton == null) return;
-
         if (inventoryOpenButton != null)
             inventoryOpenButton.GetComponent<Button>().onClick.AddListener(delegate { inventoryPanel.SetActive(true); });
 
@@ -55,6 +69,7 @@ public class InventoryUI : MonoBehaviour
 
 
         itemOptionsMenu.SetActive(false);
+        discardMenu.SetActive(false);
 
         _contentPanel = inventoryPanel.GetComponent<ScrollRect>().content.gameObject;
 
@@ -74,14 +89,40 @@ public class InventoryUI : MonoBehaviour
         var vlg = _contentPanel.GetComponent<VerticalLayoutGroup>();
         hlg.spacing = vlg.spacing = Mathf.FloorToInt(_distancePerSlot);
         vlg.padding.top = vlg.padding.left = (int)vlg.spacing * 2;
+
+        discardPlusOne.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 1); });
+        discardPlusFive.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 5); });
+        discardPlusTen.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(true, 10); });
+        discardReset.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(false, 0); });
+        discardCancel.GetComponent<Button>().onClick.AddListener(delegate { discardMenu.SetActive(false); _discardItemName = ""; _discardQuantity = 0; });
+    }
+
+    void Update()
+    {
+        if (discardMenu.activeSelf)
+            discardConfirm.GetComponent<Button>().interactable = _discardQuantity > 0;
+
     }
 
     public void OnOpenAndClose()
     {
-        if (!inventoryPanel.activeInHierarchy) Draw();
+        if (!inventoryPanel.activeSelf) Draw();
         else Erase();
 
-        inventoryPanel.SetActive(!inventoryPanel.activeInHierarchy);
+        inventoryPanel.SetActive(!inventoryPanel.activeSelf);
+    }
+
+    private void SetDiscardQuantity(bool acc, int i)
+    {
+        if (acc)
+        {
+            _discardQuantity += i;
+            _discardQuantity = Math.Clamp(_discardQuantity, 0, _discardMaxQuantity);
+        }
+
+        else _discardQuantity = i;
+
+        discardText.text = $"Discard: {_discardQuantity} of {_discardItemName}";
     }
 
     public void HandleDrawInventory(InventoryManager im)
@@ -91,14 +132,14 @@ public class InventoryUI : MonoBehaviour
 
         _currentInventoryManager = im;
 
-        if (inventoryPanel.activeInHierarchy)
+        if (inventoryPanel.activeSelf)
         {
             Erase();
             Draw();
         }
     }
 
-    public void HandleItemOptionsMenu(bool show, Item item)
+    public void HandleItemOptionsMenu(bool show, ValueTuple<int, Item> item = new ValueTuple<int, Item>())
     {
         var useBtn = useButton.GetComponent<Button>();
         var dscBtn = discardButton.GetComponent<Button>();
@@ -108,20 +149,35 @@ public class InventoryUI : MonoBehaviour
         dscBtn.onClick.RemoveAllListeners();
         trnBtn.onClick.RemoveAllListeners();
 
+        if (discardMenu.activeInHierarchy) return;
+
         if (show)
         {
             itemOptionsMenu.SetActive(true);
-            itemOptionsItemName.text = item.ItemData.Name;
-            useBtn.GetComponentInChildren<TextMeshProUGUI>().text = item.ItemData.ItemActionVerb.ToString();
-            useBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item, ItemOptions.Use); });
-            dscBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item, ItemOptions.Discard); });
-            trnBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item, ItemOptions.Transfer); });
+            itemOptionsItemName.text = item.Item2.ItemData.Name;
+            useBtn.GetComponentInChildren<TextMeshProUGUI>().text = item.Item2.ItemData.ItemActionVerb.ToString();
+            useBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item.Item2, ItemOptions.Use); });
+            dscBtn.onClick.AddListener(delegate { HandleDiscardOption(item); });
+            trnBtn.onClick.AddListener(delegate { _currentInventoryManager.InteractWithItem(item.Item2, ItemOptions.Transfer); });
         }
         else
         {
             itemOptionsMenu.SetActive(false);
             itemOptionsItemName.text = "";
         }
+    }
+
+    public void HandleDiscardOption(ValueTuple<int, Item> item)
+    {
+        _discardItemName = item.Item2.ItemData.Name;
+        _discardMaxQuantity = item.Item1;
+        discardText.text = $"Discard: {_discardQuantity} of {_discardItemName}";
+        itemOptionsMenu.SetActive(false);
+        discardAll.GetComponent<Button>().onClick.RemoveAllListeners();
+        discardAll.GetComponent<Button>().onClick.AddListener(delegate { SetDiscardQuantity(false, item.Item1); });
+        discardConfirm.GetComponent<Button>().onClick.RemoveAllListeners();
+        discardConfirm.GetComponent<Button>().onClick.AddListener(delegate { _currentInventoryManager.Discard(item.Item2, _discardQuantity); _discardItemName = ""; _discardQuantity = 0; _discardMaxQuantity = 0; discardMenu.SetActive(false); });
+        discardMenu.SetActive(true);
     }
 
     public void Draw()
@@ -140,7 +196,7 @@ public class InventoryUI : MonoBehaviour
                        delegate
                        {
                            _currentInventoryManager.SetSelectedItem(null);
-                           HandleItemOptionsMenu(false, null);
+                           HandleItemOptionsMenu(false);
                        }
                     );
                     continue;
@@ -150,8 +206,16 @@ public class InventoryUI : MonoBehaviour
                 obj.GetComponent<Button>().onClick.AddListener(
                     delegate
                     {
-                        _currentInventoryManager.SetSelectedItem(item.Value.Item2);
-                        HandleItemOptionsMenu(true, item.Value.Item2);
+                        if (item.Value.Item2.ID != _currentInventoryManager.GetSelectedItem()?.ID)
+                        {
+                            _currentInventoryManager.SetSelectedItem(item.Value.Item2);
+                            HandleItemOptionsMenu(true, (ValueTuple<int, Item>)item);
+                        }
+                        else
+                        {
+                            _currentInventoryManager.SetSelectedItem(null);
+                            HandleItemOptionsMenu(false);
+                        }
                     }
                 );
                 obj.GetComponentInChildren<TextMeshProUGUI>().text = item.Value.Item1.ToString();
